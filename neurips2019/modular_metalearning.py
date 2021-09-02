@@ -965,59 +965,60 @@ class BounceGrad(object):
 
       if self.do_mtrain:
         tick_train = time.time()
-        for i_batch, batch_datasets in enumerate(self.DL_Mtrain[:1]):
-          print("============== Train : {} / {} ==============".format(i_batch+1, len(self.DL_Mtrain)))
-          #######################
-          # Simulated Annealing #
-          #######################
-          # Update structure
-          # for dataset in batch_datasets:
-          #   self.S.update_structure(self.S.TrainStructures[dataset.structure_idx], step=self.step)
-          batch_structures = [self.S.TrainStructures[dataset.structure_idx]
-              for dataset in batch_datasets]
-
-          updated_structures, train_loss, val_loss, train_loss_every, \
-              val_loss_every, train_ans, val_ans, numcorr_SA_truth,\
-              numcorr_enc_truth, numcorr_enc_SA, pred_probs, chosen, \
-              accepted_structs, accepted_pred_probs, numcorr_bidir, MAML_g \
-            = self.batched_bounce(batch_structures, batch_datasets, temp,
-                do_grad=True, step=step, i_batch=i_batch)
-
-          my_train_loss_batch.append(train_loss)
-          my_val_loss_batch.append(val_loss)
-
-          # update TrainStructures with new structures
-          for structure, dataset in zip(updated_structures, batch_datasets):
-            self.S.TrainStructures[dataset.structure_idx] = structure
-
-          #### encoder step ####
-          if (self.encoder_input_type not in ["none", "truth"] and
-              accepted_pred_probs.shape[0] > 0):
-            encoder_loss = self.encoder_loss(accepted_structs,
-                accepted_pred_probs, len(batch_structures))
-            self.encoder_step(encoder_loss, chosen)
-          else:
-            encoder_loss = torch.Tensor([0])
-
-          # metrics tracking per batch
-          self._update_mtrain_perf_tracking(train_loss, val_loss,
-              train_loss_every, val_loss_every,
-              encoder_loss.detach().cpu().numpy(),
-              numcorr_SA_truth, numcorr_bidir, numcorr_enc_truth,
-              numcorr_enc_SA)
-          # self._update_mtrain_answers_tracking(batch_datasets, train_ans, val_ans)
-          ####################
-          # Gradient Descent #
-          ####################
+        for i_batch, batch_datasets in enumerate(self.DL_Mtrain):
           if i_batch == 0:
-            print(sum([p.norm(2.).item() for p in self.L.parameters()])**0.5)
-          # torch.nn.utils.clip_grad_norm_(self.L.parameters(), 10.) #9.8 in exp
-          self.SOpt.step()
-          self.SOpt.zero_grad()
+            print("============== Train : {} / {} ==============".format(i_batch+1, len(self.DL_Mtrain)))
+            #######################
+            # Simulated Annealing #
+            #######################
+            # Update structure
+            # for dataset in batch_datasets:
+            #   self.S.update_structure(self.S.TrainStructures[dataset.structure_idx], step=self.step)
+            batch_structures = [self.S.TrainStructures[dataset.structure_idx]
+                for dataset in batch_datasets]
 
-          if self.LocalOpt is not None:
-            self.LocalOpt.step()
-            self.LocalOpt.zero_grad()
+            updated_structures, train_loss, val_loss, train_loss_every, \
+                val_loss_every, train_ans, val_ans, numcorr_SA_truth,\
+                numcorr_enc_truth, numcorr_enc_SA, pred_probs, chosen, \
+                accepted_structs, accepted_pred_probs, numcorr_bidir, MAML_g \
+              = self.batched_bounce(batch_structures, batch_datasets, temp,
+                  do_grad=True, step=step, i_batch=i_batch)
+
+            my_train_loss_batch.append(train_loss)
+            my_val_loss_batch.append(val_loss)
+
+            # update TrainStructures with new structures
+            for structure, dataset in zip(updated_structures, batch_datasets):
+              self.S.TrainStructures[dataset.structure_idx] = structure
+
+            #### encoder step ####
+            if (self.encoder_input_type not in ["none", "truth"] and
+                accepted_pred_probs.shape[0] > 0):
+              encoder_loss = self.encoder_loss(accepted_structs,
+                  accepted_pred_probs, len(batch_structures))
+              self.encoder_step(encoder_loss, chosen)
+            else:
+              encoder_loss = torch.Tensor([0])
+
+            # metrics tracking per batch
+            self._update_mtrain_perf_tracking(train_loss, val_loss,
+                train_loss_every, val_loss_every,
+                encoder_loss.detach().cpu().numpy(),
+                numcorr_SA_truth, numcorr_bidir, numcorr_enc_truth,
+                numcorr_enc_SA)
+            # self._update_mtrain_answers_tracking(batch_datasets, train_ans, val_ans)
+            ####################
+            # Gradient Descent #
+            ####################
+            if i_batch == 0:
+              print(sum([p.norm(2.).item() for p in self.L.parameters()])**0.5)
+            # torch.nn.utils.clip_grad_norm_(self.L.parameters(), 10.) #9.8 in exp
+            self.SOpt.step()
+            self.SOpt.zero_grad()
+
+            if self.LocalOpt is not None:
+              self.LocalOpt.step()
+              self.LocalOpt.zero_grad()
         tak_train = time.time()
         train_time = tak_train - tick_train
       ##############################################

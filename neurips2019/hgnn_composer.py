@@ -136,13 +136,12 @@ class HGNN_Composer(Composer):
     # edge_sources = copy.deepcopy(self.structure['edge_sources']) # module->[list of nodes]
     # edge_sinks = copy.deepcopy(self.structure['edge_sinks']) # module->[list of nodes]
 
-    node_idx = copy.deepcopy(self.structure['node_idx'])  # module->[list of nodes]
-    if i_batch is not None:
-      node_idx = [[],[]]
-      for _ in range(mini_batch_size):
-        for __ in range(self.structure['num_nodes']):
-          node_idx[i_batch].append(__ + _*self.structure['num_nodes'])
-
+    # node_idx = copy.deepcopy(self.structure['node_idx'])  # module->[list of nodes]
+    # if i_batch is not None:
+    #   node_idx = [[],[]]
+    #   for _ in range(mini_batch_size):
+    #     for __ in range(self.structure['num_nodes']):
+    #       node_idx[i_batch].append(__ + _*self.structure['num_nodes'])
 
     # aa = copy.deepcopy(edge_sources[0])
     # bb = copy.deepcopy(edge_sinks[0])
